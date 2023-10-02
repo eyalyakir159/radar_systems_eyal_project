@@ -1,0 +1,129 @@
+import pandas as pd
+import torch
+import os
+import matplotlib.pyplot as plt
+import numpy as np  # If your data is not already in a numpy array
+from torch.utils.data import Dataset, DataLoader,random_split
+import matplotlib.cm as cm
+
+
+current_dir = os.getcwd()
+
+root_dir = current_dir
+#root_dir = os.path.dirname(current_dir)
+def load_file_to_csv(file_path):
+    path = f"{root_dir}/data/{file_path}"
+    df = pd.read_csv(path)
+    tensor = torch.tensor(df.values)
+
+    # Choose a colormap
+    colormap = cm.viridis
+    # Normalize the array values to the range [0, 1]
+    normalized_array = (tensor - tensor.min()) / (tensor.max() - tensor.min())
+    # Map the normalized array to RGBA values using the colormap
+    rgba_image = torch.tensor(colormap(normalized_array)).permute(2,0,1)
+    return rgba_image
+
+def drew_wavelet_of_data(data,already_transformed = False):
+
+    plt.figure(figsize=(10, 6))  # You can adjust the figure size as needed
+    if already_transformed:
+        plt.imshow(data)
+    else:
+        plt.imshow(data, aspect='auto', cmap='viridis')  # You can change the colormap as needed
+    plt.colorbar(label='Magnitude')
+    plt.title('Doppler Matrix Heatmap')
+    plt.ylabel('Distanace Cell')
+    plt.xlabel('Doppler Cell')
+    plt.show()
+
+def get_data():
+
+    Cars = []
+    Drones = []
+    People = []
+
+    for folder in os.listdir(os.path.join(root_dir, 'data/Cars')):
+        if not folder.startswith('.'):
+            for file in os.listdir(os.path.join(root_dir, f'data/Cars/{folder}')):
+                Cars.append(load_file_to_csv(f'Cars/{folder}/{file}'))
+
+    for folder in os.listdir(os.path.join(root_dir, 'data/Drones')):
+        if not folder.startswith('.'):
+            for file in os.listdir(os.path.join(root_dir, f'data/Drones/{folder}')):
+                Drones.append(load_file_to_csv(f'Drones/{folder}/{file}'))
+
+    for folder in os.listdir(os.path.join(root_dir, 'data/People')):
+        if not folder.startswith('.'):
+            for file in os.listdir(os.path.join(root_dir, f'data/People/{folder}')):
+                People.append(load_file_to_csv(f'People/{folder}/{file}'))
+    return torch.stack(Cars),torch.stack(Drones),torch.stack(People)
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier
+
+# Define terrain types
+terrains = ['mountain', 'grass', 'sea']
+
+
+# Function to simulate radar signal for a given terrain
+def simulate_radar_signal(terrain):
+    assert terrain in ['mountain','grass','sea']
+    np.random.seed(42)  # For reproducibility
+    signal = np.random.rand(10, 61)  # Initialize signal with random noise
+
+    # Modify signal based on terrain type
+    if terrain == 'mountain':
+        signal[:, :20] += 1  # Increase power in the first 20 frequency bins
+    elif terrain == 'grass':
+        signal[:, 20:40] += 1  # Increase power in the middle 20 frequency bins
+    elif terrain == 'sea':
+        signal[:, 40:] += 1  # Increase power in the last 21 frequency bins
+
+    return torch.from_numpy(signal)
+
+def get_terrain_data(amount=500):
+    terrains = ['mountain','grass','sea']
+    data = []
+    for terrain in terrains:
+        for _ in range(100):  # Number of samples per terrain
+            data.append(simulate_radar_signal(terrain))
+    return torch.stack(data)
+def get_data_loader(batch_size,shuffle=True):
+    cars,drones,pepople = get_data()
+    terrain = get_terrain_data(500)
+    class CustomDataset(Dataset):
+        def __init__(self, cars, drones, people,terrain):
+            self.data = []
+            self.data.extend([(sample, torch.tensor([1, 0, 0,0])) for sample in cars])  # [1, 0, 0,0] for cars
+            self.data.extend([(sample, torch.tensor([0, 1, 0,0])) for sample in drones])  # [0, 1, 0,0] for drones
+            self.data.extend([(sample, torch.tensor([0, 0, 1,0])) for sample in people])  # [0, 0,1,0] for people
+            self.data.extend([(sample, torch.tensor([0, 0, 0,1])) for sample in terrain])  # [0, 0,0,1] for people
+
+        def __len__(self):
+            return len(self.data)
+
+        def __getitem__(self, idx):
+            return self.data[idx]
+
+    dataset = CustomDataset(cars, drones, pepople,terrain)
+
+    total_size = len(dataset)
+    train_size = int(0.7 * total_size)  # 70% for training
+    val_size = int(0.15 * total_size)  # 15% for validation
+    test_size = total_size - train_size - val_size  # 15% for testing
+
+    train_dataset, val_dataset, test_dataset = random_split(dataset, [train_size, val_size, test_size])
+
+    return DataLoader(train_dataset, batch_size=32, shuffle=True),DataLoader(val_dataset, batch_size=32, shuffle=True),DataLoader(test_dataset, batch_size=32, shuffle=True)
+
+
+
+
+
+
+
+
+
