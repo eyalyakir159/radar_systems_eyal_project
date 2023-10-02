@@ -12,18 +12,20 @@ LEARING_RATE = 0.0002
 BATCHSIZE=32
 EPCHOS = 200
 
+
 #network stuff
 #model = network.basic_linear_network.SimpleLinearNetwork(10*61*4,3) ##choose model
-#model = network.conv_network.CustomCNN()
+model = network.conv_network.CustomCNN(4,3)
 #model = network.Doppler_net.DopplerNet()
 #model = network.NASNetMobile.ModifiedMobileNetV2(3)
-model = network.unet_model.UNet(4,3)
-criterion = nn.BCEWithLogitsLoss() ## becuse it is normal labling
-#criterion = nn.CrossEntropyLoss()
+#model = network.unet_model.UNet(4,3)
+#criterion = nn.BCEWithLogitsLoss() ## becuse it is normal labling
+criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARING_RATE)
 
 #get data
-train_loader,val_loader,test_loader = data_managment.get_data_loader(BATCHSIZE)
+add_terrain = False
+train_loader,val_loader,test_loader = data_managment.get_data_loader(BATCHSIZE,add_terrain=add_terrain)
 
 
 #train
