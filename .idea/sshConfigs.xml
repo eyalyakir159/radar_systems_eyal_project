@@ -2,7 +2,7 @@
 <project version="4">
   <component name="SshConfigs">
     <configs>
-      <sshConfig authType="PASSWORD" connectionConfig="{&quot;serverAliveInterval&quot;:300}" host="132.72.107.208" id="fee7647b-0c85-4d77-8fe7-dbfde8e12bf2" port="22" customName="perm1" nameFormat="CUSTOM" username="rom" useOpenSSHConfig="true">
+      <sshConfig authType="PASSWORD" connectionConfig="{&quot;serverAliveInterval&quot;:300}" host="132.72.107.208" id="fee7647b-0c85-4d77-8fe7-dbfde8e12bf2" port="22" customName="perm1" nameFormat="CUSTOM" username="eyal" useOpenSSHConfig="true">
         <option name="customName" value="perm1" />
       </sshConfig>
     </configs>

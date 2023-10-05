@@ -52,9 +52,16 @@ class Up(nn.Module):
         else:
             self.up = nn.ConvTranspose2d(in_channels, in_channels // 2, kernel_size=2, stride=2)
             self.conv = DoubleConv(in_channels, out_channels)
-
+        self.tdrm_lim = nn.Linear(in_channels,in_channels)
     def forward(self, x1, x2):
         x1 = self.up(x1)
+        # do the tdrm
+        fc = 8.75e9  # 8.75 giga
+        c = torch.tensor(3.0e8)  # speed of light in meters per second
+        tm = 350  # 350 seconds
+        delta_f = 200e6  # 200 mega
+        x2=(x2*fc*c*tm)/(2*delta_f)
+        x2=self.tdrm_lin(x2)
         # input is CHW
         diffY = x2.size()[2] - x1.size()[2]
         diffX = x2.size()[3] - x1.size()[3]

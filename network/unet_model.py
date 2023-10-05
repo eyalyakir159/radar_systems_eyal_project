@@ -3,7 +3,7 @@
 from network.unet_part import *
 
 class UNet(nn.Module):
-    def __init__(self, n_channels, n_classes,output_size ,bilinear=False):
+    def __init__(self, n_channels, n_classes ,bilinear=False):
         super(UNet, self).__init__()
         self.n_channels = n_channels
         self.n_classes = n_classes
@@ -20,7 +20,7 @@ class UNet(nn.Module):
         self.outc = (OutConv(64, n_classes))
 
         # my addon
-        self.fc = nn.Linear(61*10*3, output_size)  # 4 output classes: car, person, drone
+        self.fc = nn.Linear(61*10*n_classes, n_classes)  # 4 output classes: car, person, drone
 
 
     def forward(self, x):

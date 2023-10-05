@@ -65,23 +65,25 @@ def simulate_radar_signal(terrain):
     elif terrain == 'sea':
         signal[:, 40:] += 1  # Increase power in the last 21 frequency bins
 
-    return torch.from_numpy(signal)
+    rgba_image = torch.tensor(cm.viridis(torch.from_numpy(signal))).permute(2,0,1)
+
+    return rgba_image
 
 def get_terrain_data(amount=500):
     terrains = ['mountain','grass','sea']
     data = []
     for terrain in terrains:
-        for _ in range(100):  # Number of samples per terrain
+        for _ in range(amount//3):  # Number of samples per terrain
             data.append(simulate_radar_signal(terrain))
     return torch.stack(data)
 def get_data_loader(batch_size,shuffle=True,add_terrain=False):
     cars,drones,pepople = get_data()
     if add_terrain:
-        terrain = get_terrain_data(500)
+        terrain = get_terrain_data(5000)
     class CustomDataset(Dataset):
         def __init__(self, cars, drones, people,terrain=None):
             self.data = []
-            if terrain:
+            if terrain is not None:
                 self.data.extend([(sample, torch.tensor([1, 0, 0,0])) for sample in cars])  # [1, 0, 0,0] for cars
                 self.data.extend([(sample, torch.tensor([0, 1, 0,0])) for sample in drones])  # [0, 1, 0,0] for drones
                 self.data.extend([(sample, torch.tensor([0, 0, 1,0])) for sample in people])  # [0, 0,1,0] for people
@@ -108,7 +110,7 @@ def get_data_loader(batch_size,shuffle=True,add_terrain=False):
 
     train_dataset, val_dataset, test_dataset = random_split(dataset, [train_size, val_size, test_size])
 
-    return DataLoader(train_dataset, batch_size=32, shuffle=True),DataLoader(val_dataset, batch_size=32, shuffle=True),DataLoader(test_dataset, batch_size=32, shuffle=True)
+    return DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle),DataLoader(val_dataset, batch_size=batch_size, shuffle=shuffle),DataLoader(test_dataset, batch_size=batch_size, shuffle=shuffle)
 
 
 
