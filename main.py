@@ -35,7 +35,7 @@ criterion = nn.BCEWithLogitsLoss() ## becuse it is normal labling
 
 
 # get data
-add_terrain = True
+add_terrain = False
 train_loader, val_loader, test_loader = data_managment.get_data_loader(BATCHSIZE, add_terrain=add_terrain)
 
 print(f"running on model {model.__class__.__name__}")
@@ -53,7 +53,7 @@ for epcho in range(EPCHOS):
     #test
     model_utils.evaluate(model,test_loader,'Test')
 
-    torch.save(model, f'results/trained_models/{model.__class__.__name__}_Terrain.pth')
+    torch.save(model, f'results/trained_models/{model.__class__.__name__}.pth')
 
 
 
